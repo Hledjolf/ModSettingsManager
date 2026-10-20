@@ -1,0 +1,14 @@
+{
+  "Group": "ModSettingsManager",
+  "Name": "ModSettingsManager",
+  "Version": "${version}",
+  "Description": "An in-game settings window for every mod's config.json. Optional sidecar files add labels, sections, ranges and dropdowns; an optional hook applies changes live.",
+  "Authors": [
+    { "Name": "Hledjolf" }
+  ],
+  "Website": "https://github.com/Hledjolf/ModSettingsManager",
+  "Main": "modsettings.ModSettingsPlugin",
+  "ServerVersion": "*",
+  "IncludesAssetPack": true,
+  "Dependencies": {}
+}

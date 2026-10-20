@@ -1,0 +1,21 @@
+# Allow-list: the repo holds only what builds and installs the mod.
+# Design docs, page kit, tools, tests and test fixtures stay local.
+/*
+!/.gitignore
+!/.gitattributes
+!/LICENSE
+!/README.md
+!/CHANGELOG.md
+!/build.gradle.kts
+!/settings.gradle.kts
+!/gradle.properties
+!/gradlew
+!/gradlew.bat
+!/gradle/
+!/schema/
+!/src/
+/src/*
+!/src/main/
+!/docs/
+/docs/*
+!/docs/SIDECAR.md

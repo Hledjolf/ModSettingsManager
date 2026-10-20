@@ -1,0 +1,12 @@
+// A line of text in the settings list: an error, or that there is nothing to show.
+$C = "../Common.ui";
+
+Group {
+  Anchor: (Height: 48);
+  Padding: (Horizontal: 6);
+
+  Label #Text {
+    Text: "";
+    Style: (FontSize: 15, TextColor: #e8a93b, VerticalAlignment: Center, Wrap: true);
+  }
+}

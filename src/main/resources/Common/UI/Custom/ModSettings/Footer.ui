@@ -1,0 +1,22 @@
+// Apply, Reset to default and Revert. Re-appended on every redraw, so that the value captures bound to Apply match the rows.
+$C = "../Common.ui";
+
+Group {
+  LayoutMode: Right;
+  Anchor: (Height: 44);
+
+  $C.@TextButton #ApplyButton {
+    @Text = "Apply";
+    @Anchor = (Left: 8, Width: 170);
+  }
+
+  $C.@SecondaryTextButton #ResetButton {
+    @Text = "Reset to default";
+    @Anchor = (Left: 8, Width: 230);
+  }
+
+  $C.@SecondaryTextButton #RevertButton {
+    @Text = "Revert";
+    @Anchor = (Left: 8, Width: 160);
+  }
+}

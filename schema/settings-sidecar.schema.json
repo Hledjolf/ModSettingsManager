@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mod Settings Manager sidecar, format 1",
+  "description": "Optional labels, sections, ranges and options for one plugin's config file. Ship it as Settings/<Group>_<Name>.settings.json in the plugin jar or next to the config file. Mod Settings Manager reads it; nothing else does, so it costs a mod no dependency. MIT licensed: any mod may ship a sidecar freely.",
+  "type": "object",
+  "required": ["format", "plugin", "keys"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional, for editors."
+    },
+    "format": {
+      "const": 1,
+      "description": "Sidecar format version. This schema describes format 1."
+    },
+    "plugin": {
+      "type": "string",
+      "pattern": "^[^:\\s]+:[^:\\s]+$",
+      "description": "The plugin this sidecar describes, as Group:Name from its manifest.json."
+    },
+    "config": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!.*(^|[/\\\\])\\.\\.([/\\\\]|$)).*\\.json$",
+      "description": "Path of the config file relative to the plugin's data folder. Defaults to config.json."
+    },
+    "sections": {
+      "type": "array",
+      "description": "Groups of keys, shown in this order.",
+      "items": { "$ref": "#/$defs/section" }
+    },
+    "keys": {
+      "type": "object",
+      "description": "Per-key settings. A key may be dotted (\"Seeder.CellSize\") to address a nested object. Keys of the config not listed here still show up, with a control inferred from their value.",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/key" }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+        "label": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "description": "Shown instead of the key name." },
+        "description": { "type": "string", "description": "Tooltip text." },
+        "section": { "type": "string", "description": "The id of a section in sections." },
+        "type": {
+          "enum": ["bool", "int", "float", "enum", "string"],
+          "description": "The control to show. Without it, the type is inferred from the value in the config."
+        },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "The allowed values, shown as a dropdown. Implies type enum."
+        },
+        "default": {
+          "type": ["boolean", "number", "string"],
+          "description": "The value Reset to default restores."
+        },
+        "restart": {
+          "type": "boolean",
+          "description": "true: the change takes effect only after a restart. false: the mod picks it up live."
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "true: never shown in the window."
+        }
+      }
+    }
+  }
+}

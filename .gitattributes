@@ -1,2 +1,4 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Keep LF in scripts (core.autocrlf is false in this repo)
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf

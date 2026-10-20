@@ -1,0 +1,19 @@
+// A section header in the settings list.
+$C = "../Common.ui";
+
+Group {
+  LayoutMode: Top;
+  Anchor: (Height: 52, Top: 6);
+
+  Label #Title {
+    Text: "";
+    Anchor: (Height: 28);
+    Style: (FontSize: 17, RenderBold: true, RenderUppercase: true, TextColor: #7a9cc6, VerticalAlignment: Center);
+  }
+
+  Label #Description {
+    Text: "";
+    Anchor: (Height: 20);
+    Style: (FontSize: 13, TextColor: #878e9c, VerticalAlignment: Center);
+  }
+}

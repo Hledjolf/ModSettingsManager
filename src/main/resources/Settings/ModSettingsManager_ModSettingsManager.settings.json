@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "plugin": "ModSettingsManager:ModSettingsManager",
+  "config": "config.json",
+  "keys": {
+    "AnnounceChanges": {
+      "label": "Announce changes in chat",
+      "description": "When someone applies a change, every online player who may edit settings gets a chat line saying who changed what.",
+      "type": "bool",
+      "default": false,
+      "restart": false
+    },
+    "HiddenPlugins": {
+      "label": "Hidden plugins",
+      "description": "Plugin ids (Group:Name) to leave out of the window. Edit config.json to change this list, then run /modsettings reload."
+    }
+  }
+}
