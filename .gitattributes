@@ -1,4 +1,5 @@
-# Keep LF in scripts (core.autocrlf is false in this repo)
-*.sh text eol=lf
-gradlew text eol=lf
+# LF everywhere except Windows batch files
+* text=auto eol=lf
 *.bat text eol=crlf
+*.jar binary
+*.png binary
