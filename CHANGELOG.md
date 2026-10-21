@@ -4,6 +4,7 @@
 
 Small fixes found while testing against a real mod.
 
+- Fix: big numbers were clipped in number fields (a 13-digit Unix time showed as its last 11 digits). A number whose value, `min` or `max` needs more than 9 characters now gets a wider field; the -/+ steppers stay.
 - **Display names:** a sidecar may now carry an optional top-level `"title"` (up to 60 characters, for example "Calendar & Seasons"). The mod list, the header, the status texts, and the chat and console messages use it instead of the manifest Name; search and `/modsettings <mod>` match it. Without a title the Name is shown with CamelCase split into words ("PlaytestNotes" becomes "Playtest Notes"). Version 1.0.0 rejects a sidecar that has `title`, so it falls back to inferred controls there.
 - **Dropdown case:** dropdown values and entries keep their case (`HH:MM`, `H:MM A`) instead of being forced to capitals, so `mm` and `MM` can be told apart.
 - Fix: the restart banner stayed up after Reset to default (or any change) put a restart-only setting back to the value the mod is running with.

@@ -38,13 +38,15 @@ public final class SettingsWindow {
     public static final String BOOL_ROW = DIR + "BoolRow.ui";
     public static final String INT_ROW = DIR + "IntRow.ui";
     public static final String FLOAT_ROW = DIR + "FloatRow.ui";
+    public static final String INT_WIDE_ROW = DIR + "IntWideRow.ui";
+    public static final String FLOAT_WIDE_ROW = DIR + "FloatWideRow.ui";
     public static final String TEXT_ROW = DIR + "TextRow.ui";
     public static final String ENUM_ROW = DIR + "EnumRow.ui";
     public static final String READONLY_ROW = DIR + "ReadOnlyRow.ui";
     public static final String FOOTER = DIR + "Footer.ui";
 
     /** Every document the window uses (the adapter checks they are registered). */
-    public static final List<String> DOCUMENTS = List.of(DOC, MOD_ROW, SECTION_ROW, NOTE_ROW, BOOL_ROW, INT_ROW, FLOAT_ROW, TEXT_ROW, ENUM_ROW, READONLY_ROW, FOOTER);
+    public static final List<String> DOCUMENTS = List.of(DOC, MOD_ROW, SECTION_ROW, NOTE_ROW, BOOL_ROW, INT_ROW, FLOAT_ROW, INT_WIDE_ROW, FLOAT_WIDE_ROW, TEXT_ROW, ENUM_ROW, READONLY_ROW, FOOTER);
 
     static final int MAX_DISPLAY = 160;
 
@@ -380,6 +382,22 @@ public final class SettingsWindow {
         ops.text("#Status", status.isEmpty() ? summary : status);
     }
 
+    /** Longest text, in characters, the normal number field shows whole. */
+    static final int NARROW_CHARS = 9;
+
+    /** The row document for a number control: the wide variant when its value, min or max needs more than {@link #NARROW_CHARS}. */
+    static String numberRow(Control c, Object shown) {
+        boolean wide = chars(shown instanceof Number n ? n.doubleValue() : null) > NARROW_CHARS
+                || chars(c.min()) > NARROW_CHARS || chars(c.max()) > NARROW_CHARS;
+        if (c.kind() == Control.Kind.INT) return wide ? INT_WIDE_ROW : INT_ROW;
+        return wide ? FLOAT_WIDE_ROW : FLOAT_ROW;
+    }
+
+    private static int chars(Double d) {
+        if (d == null || d.isNaN() || d.isInfinite()) return 0;
+        return new java.math.BigDecimal(d).stripTrailingZeros().toPlainString().length();
+    }
+
     private void renderControl(UiOps ops, int row, Control c) {
         String sel = "#Rows[" + row + "]";
         Object shown = draft.containsKey(c.key()) ? draft.get(c.key()) : c.value();
@@ -389,7 +407,7 @@ public final class SettingsWindow {
                 ops.set(sel + " #Input.Value", Boolean.TRUE.equals(shown));
             }
             case INT, FLOAT -> {
-                ops.append("#Rows", c.kind() == Control.Kind.INT ? INT_ROW : FLOAT_ROW);
+                ops.append("#Rows", numberRow(c, shown));
                 ops.set(sel + " #Input.Value", shown instanceof Number n ? n.doubleValue() : 0.0);
             }
             case ENUM -> {

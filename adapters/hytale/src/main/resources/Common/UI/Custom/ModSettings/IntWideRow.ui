@@ -1,0 +1,44 @@
+// Wide variant for values too long for the normal field (about 10 digits or more), with -/+ steppers.
+$C = "../Common.ui";
+
+Group {
+  LayoutMode: Left;
+  Anchor: (Height: 40, Bottom: 4);
+
+  Label #Changed {
+    Text: "*";
+    Visible: false;
+    Anchor: (Width: 14);
+    Style: (FontSize: 18, RenderBold: true, TextColor: #e8a93b, VerticalAlignment: Center);
+  }
+
+  Label #Label {
+    Text: "";
+    Anchor: (Width: 300, Right: 12);
+    Style: (...$C.@DefaultLabelStyle, VerticalAlignment: Center, Wrap: true);
+    TextTooltipStyle: $C.@DefaultTextTooltipStyle;
+  }
+
+  $C.@SmallSecondaryTextButton #Minus {
+    @Text = "-";
+    @Anchor = (Width: 40, Top: 4, Right: 4);
+    Padding: (Horizontal: 0);
+  }
+
+  $C.@NumberField #Input {
+    @Anchor = (Width: 220, Right: 4);
+    Format: (MaxDecimalPlaces: 0, Step: 1);
+  }
+
+  $C.@SmallSecondaryTextButton #Plus {
+    @Text = "+";
+    @Anchor = (Width: 40, Top: 4, Right: 12);
+    Padding: (Horizontal: 0);
+  }
+
+  Label #Hint {
+    Text: "";
+    FlexWeight: 1;
+    Style: (FontSize: 13, TextColor: #878e9c, VerticalAlignment: Center, Wrap: true);
+  }
+}
