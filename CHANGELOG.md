@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1 (unreleased), Hytale 0.7.3
+## 1.0.1 (2026-10-21), Hytale 0.7.3
 
 Small fixes found while testing against a real mod.
 

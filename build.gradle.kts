@@ -84,12 +84,12 @@ val checkJarContents = tasks.register("checkJarContents") {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// checkNoProjectMarks: this mod is a standalone product. No tracked, shipped or page-kit text may name the
-// author's other projects. The words are assembled from parts so this file does not match itself.
+// checkNoProjectMarks: this mod is a standalone product. No tracked, shipped or page-kit text may contain
+// blocked terms. The words are assembled from parts so this file does not match itself.
 // ---------------------------------------------------------------------------------------------------------
 val checkNoProjectMarks = tasks.register("checkNoProjectMarks") {
     group = "verification"
-    description = "Fails if a tracked or shipped file names another project of the author."
+    description = "Fails if a tracked or shipped file contains a blocked term."
     dependsOn(hytaleJar)
     val jarFile = hytaleJar.flatMap { it.archiveFile }
     val roots = listOf("core/src/main", "adapters/hytale/src/main", "schema", "gradle", "docs/page")
@@ -113,7 +113,7 @@ val checkNoProjectMarks = tasks.register("checkNoProjectMarks") {
                 if (pattern.containsMatchIn(String(bytes, Charsets.ISO_8859_1)) || pattern.containsMatchIn(e.name)) hits += "jar:" + e.name
             }
         }
-        if (hits.isNotEmpty()) throw GradleException("Names of other projects found (not allowed in a standalone mod):\n" + hits.joinToString("\n") { " - $it" })
+        if (hits.isNotEmpty()) throw GradleException("Blocked terms found:\n" + hits.joinToString("\n") { " - $it" })
     }
 }
 
