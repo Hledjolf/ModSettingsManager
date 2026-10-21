@@ -15,6 +15,7 @@ Put this in your jar at `Settings/<Group>_<Name>.settings.json`, where `Group` a
 {
   "format": 1,
   "plugin": "MyGroup:MyMod",
+  "title": "My Mod",
   "config": "config.json",
   "sections": [ { "id": "turns", "label": "Turns" } ],
   "keys": {
@@ -45,6 +46,7 @@ Server owners can also put a sidecar in your mod's data folder, as `mods/<Group>
 | --- | --- | --- |
 | `format` | yes | Always `1` for this version of the format. A newer format is rejected with a message to update Mod Settings Manager. |
 | `plugin` | yes | Your plugin as `Group:Name`. It must match the plugin the file was found for (case doesn't matter). |
+| `title` | no | The name people see, for example `"Calendar & Seasons"`, up to 60 characters. The window uses it in the mod list, the header and its status texts, and chat and console messages use it too; search matches it. The plugin id stays in the grey line under the header. Without it, the manifest `Name` is shown, with CamelCase split into words (`PlaytestNotes` becomes `Playtest Notes`; an all-capitals name is left as it is). **Mod Settings Manager 1.0.0 does not know this field: it rejects the whole sidecar as having an unknown field, and the mod's settings show with inferred controls.** Use it once 1.0.1 is the version your players have. |
 | `config` | no | The config file's path relative to your data folder, for example `"settings/server.json"`. Default `config.json`. It must stay inside the data folder and end in `.json`. |
 | `sections` | no | A list of `{ "id", "label", "description" }`, shown in this order. `id` is letters, digits, `_`, `.` and `-`. |
 | `keys` | yes | One entry per key you want to describe (it may be empty: `{}`). |

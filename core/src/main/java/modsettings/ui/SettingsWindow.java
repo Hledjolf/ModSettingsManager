@@ -295,7 +295,7 @@ public final class SettingsWindow {
             String sel = "#ModList[" + i + "]";
             ops.append("#ModList", MOD_ROW);
             String mark = !controller.restartPendingKeys(m.id()).isEmpty() ? "  (restart)" : !controller.couldNotApplyKeys(m.id()).isEmpty() ? "  (not applied)" : !controller.reverts(m.id()).isEmpty() ? "  (warning)" : "";
-            ops.text(sel + " #Button", m.name() + mark);
+            ops.text(sel + " #Button", m.displayName() + mark);
             ops.set(sel + " #Button.Disabled", selected != null && selected.id().equals(m.id()));
             ops.bind(sel + " #Button", "Activating", Map.of("Action", "select", "Mod", m.id()));
         }
@@ -322,7 +322,7 @@ public final class SettingsWindow {
             return;
         }
         if (fresh || view == null || !view.mod().id().equals(selected.id())) view = controller.view(selected);
-        ops.text("#ModName", selected.name());
+        ops.text("#ModName", selected.displayName());
         ops.text("#ModMeta", selected.id() + (selected.version() == null ? "" : "  v" + selected.version()) + "   " + selected.configFile());
         ops.text("#SidecarNote", sidecarNote(selected));
 
@@ -330,7 +330,7 @@ public final class SettingsWindow {
         List<String> rejected = controller.couldNotApplyKeys(selected.id());
         ops.visible("#RestartBanner", !pending.isEmpty() || !rejected.isEmpty());
         StringBuilder banner = new StringBuilder();
-        if (!rejected.isEmpty()) banner.append("Saved, but ").append(selected.name()).append(" could not apply: ").append(labels(rejected)).append(". See the server log.");
+        if (!rejected.isEmpty()) banner.append("Saved, but ").append(selected.displayName()).append(" could not apply: ").append(labels(rejected)).append(". See the server log.");
         if (!pending.isEmpty()) {
             if (banner.length() > 0) banner.append(' ');
             banner.append("Restart needed for: ").append(labels(pending)).append(". These changes are saved and take effect after the server restarts.");

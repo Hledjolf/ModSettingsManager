@@ -21,6 +21,15 @@ Group {
 
   $C.@DropdownBox #Input {
     @Anchor = (Top: 4, Right: 12);
+
+    // Vanilla uppercases every dropdown text; keep the case so "mm" (minutes) and "MM" (months) stay apart.
+    Style: (
+      ...$C.@DefaultDropdownBoxStyle,
+      LabelStyle: (...$C.@DefaultDropdownBoxLabelStyle, RenderUppercase: false),
+      EntryLabelStyle: (...$C.@DefaultDropdownBoxEntryLabelStyle, RenderUppercase: false),
+      NoItemsLabelStyle: (...$C.@DefaultDropdownBoxEntryLabelStyle, TextColor: #b7cedd(0.5), RenderUppercase: false),
+      SelectedEntryLabelStyle: (...$C.@DefaultDropdownBoxEntryLabelStyle, RenderBold: true, RenderUppercase: false)
+    );
   }
 
   Label #Hint {

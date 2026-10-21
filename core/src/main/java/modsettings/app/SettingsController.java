@@ -85,7 +85,7 @@ public final class SettingsController {
             ModEntry e = entryFor(p);
             if (e != null) found.add(e);
         }
-        found.sort((a, b) -> a.name().compareToIgnoreCase(b.name()));
+        found.sort((a, b) -> a.displayName().compareToIgnoreCase(b.displayName()));
         mods = List.copyOf(found);
         long withSidecar = found.stream().filter(ModEntry::hasSidecar).count();
         long rejected = found.stream().filter(ModEntry::sidecarRejected).count();
@@ -138,6 +138,8 @@ public final class SettingsController {
         if (!exists && (source == null || !errors.isEmpty())) return null;
 
         StringBuilder search = new StringBuilder(p.id()).append(' ').append(p.name()).append(' ');
+        if (sidecar.title() != null) search.append(sidecar.title()).append(' ');
+        search.append(ModEntry.humanize(p.name())).append(' ');
         if (exists) {
             try {
                 Map<String, Object> cfg = ConfigFile.read(config).config();
@@ -166,8 +168,8 @@ public final class SettingsController {
     public Optional<ModEntry> mod(String idOrName) {
         if (idOrName == null) return Optional.empty();
         String q = idOrName.toLowerCase(Locale.ROOT);
-        for (ModEntry m : mods) if (m.id().equalsIgnoreCase(q) || m.name().equalsIgnoreCase(q)) return Optional.of(m);
-        List<ModEntry> prefix = mods.stream().filter(m -> m.id().toLowerCase(Locale.ROOT).startsWith(q) || m.name().toLowerCase(Locale.ROOT).startsWith(q)).toList();
+        for (ModEntry m : mods) if (m.id().equalsIgnoreCase(q) || m.name().equalsIgnoreCase(q) || m.displayName().equalsIgnoreCase(q)) return Optional.of(m);
+        List<ModEntry> prefix = mods.stream().filter(m -> m.id().toLowerCase(Locale.ROOT).startsWith(q) || m.name().toLowerCase(Locale.ROOT).startsWith(q) || m.displayName().toLowerCase(Locale.ROOT).startsWith(q)).toList();
         return prefix.size() == 1 ? Optional.of(prefix.get(0)) : Optional.empty();
     }
 
@@ -291,20 +293,20 @@ public final class SettingsController {
                 + "; after restart: " + (restart.isEmpty() ? "none" : String.join(", ", restart))
                 + (failed.isEmpty() ? "" : "; could not apply: " + String.join(", ", failed)) + ")");
             if (announce) {
-                platform.tellEditors("[Mod Settings] " + actor.name() + " changed " + mod.name() + ": "
+                platform.tellEditors("[Mod Settings] " + actor.name() + " changed " + mod.displayName() + ": "
                     + String.join(", ", applied.stream().map(c -> c.key() + " = " + Values.display(c.newValue())).toList())
-                    + (failed.isEmpty() ? "" : " (saved, but " + mod.name() + " could not apply it)") + (restart.isEmpty() ? "" : " (restart needed)"));
+                    + (failed.isEmpty() ? "" : " (saved, but " + mod.displayName() + " could not apply it)") + (restart.isEmpty() ? "" : " (restart needed)"));
             }
             StringBuilder sb = new StringBuilder();
             if (!failed.isEmpty()) {
-                sb.append("Saved, but ").append(mod.name()).append(" could not apply: ")
+                sb.append("Saved, but ").append(mod.displayName()).append(" could not apply: ")
                     .append(String.join(", ", failed.stream().map(k -> labelOf(seen, k)).toList())).append(". See the server log.");
                 if (!restart.isEmpty()) sb.append(' ').append(Changes.takeEffect(restart.size())).append(" after a restart.");
             } else {
                 sb.append("Saved ").append(applied.size()).append(applied.size() == 1 ? " change" : " changes").append(" to ")
                     .append(mod.configFile().getFileName()).append(". ");
                 if (restart.isEmpty()) {
-                    if (outcome == Changes.HookOutcome.MISSING) sb.append(mod.name()).append(" has no live hook. It takes effect after a restart, unless the mod re-reads its file while running.");
+                    if (outcome == Changes.HookOutcome.MISSING) sb.append(mod.displayName()).append(" has no live hook. It takes effect after a restart, unless the mod re-reads its file while running.");
                     else sb.append("All in effect now.");
                 }
                 else if (restart.size() == applied.size()) sb.append(applied.size() == 1 ? "It takes effect after a restart." : "They take effect after a restart.");
@@ -332,7 +334,7 @@ public final class SettingsController {
     public CompletableFuture<ApplyResult> set(Actor actor, ModEntry mod, String key, String text) {
         ModView v = view(mod);
         if (v.error() == null && v.control(key) == null) {
-            return CompletableFuture.completedFuture(ApplyResult.of(ApplyResult.Status.INVALID, "No editable setting " + key + " in " + mod.name() + "."));
+            return CompletableFuture.completedFuture(ApplyResult.of(ApplyResult.Status.INVALID, "No editable setting " + key + " in " + mod.displayName() + "."));
         }
         Control c = v.control(key);
         if (c != null && !c.editable()) {

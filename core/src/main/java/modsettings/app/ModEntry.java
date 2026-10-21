@@ -16,6 +16,21 @@ import modsettings.model.Sidecar;
 public record ModEntry(String id, String name, String group, String version, String description, Path dataDir, Path configFile,
                        Sidecar sidecar, String sidecarSource, List<String> sidecarErrors, List<String> sidecarWarnings,
                        boolean hasHook, String searchText) {
+    /**
+     * The name to show people: the sidecar's {@code title}, else the manifest name split at CamelCase humps
+     * ("PlaytestNotes" becomes "Playtest Notes"; an all-capitals name is left alone).
+     */
+    public String displayName() {
+        String t = sidecar == null ? null : sidecar.title();
+        return t != null ? t : humanize(name);
+    }
+
+    static String humanize(String name) {
+        if (name == null) return "";
+        String s = name.replaceAll("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ");
+        return s.isBlank() ? name : s;
+    }
+
     public boolean hasSidecar() {
         return sidecarSource != null && sidecarErrors.isEmpty();
     }

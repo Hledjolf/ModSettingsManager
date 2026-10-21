@@ -8,7 +8,7 @@ import java.util.Map;
  * A parsed, validated sidecar ({@code Settings/<Group>_<Name>.settings.json}, format 1). See
  * {@code docs/SIDECAR.md} and {@code schema/settings-sidecar.schema.json}.
  */
-public record Sidecar(int format, String plugin, String config, List<Section> sections, Map<String, KeySpec> keys) {
+public record Sidecar(int format, String plugin, String title, String config, List<Section> sections, Map<String, KeySpec> keys) {
     public static final int FORMAT = 1;
     public static final String DEFAULT_CONFIG = "config.json";
 
@@ -35,6 +35,6 @@ public record Sidecar(int format, String plugin, String config, List<Section> se
 
     /** An empty sidecar (no labels): what a mod without one gets. */
     public static Sidecar none(String plugin) {
-        return new Sidecar(FORMAT, plugin, DEFAULT_CONFIG, List.of(), new LinkedHashMap<>());
+        return new Sidecar(FORMAT, plugin, null, DEFAULT_CONFIG, List.of(), new LinkedHashMap<>());
     }
 }

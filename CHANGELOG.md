@@ -4,6 +4,8 @@
 
 Small fixes found while testing against a real mod.
 
+- **Display names:** a sidecar may now carry an optional top-level `"title"` (up to 60 characters, for example "Calendar & Seasons"). The mod list, the header, the status texts, and the chat and console messages use it instead of the manifest Name; search and `/modsettings <mod>` match it. Without a title the Name is shown with CamelCase split into words ("PlaytestNotes" becomes "Playtest Notes"). Version 1.0.0 rejects a sidecar that has `title`, so it falls back to inferred controls there.
+- **Dropdown case:** dropdown values and entries keep their case (`HH:MM`, `H:MM A`) instead of being forced to capitals, so `mm` and `MM` can be told apart.
 - Fix: the restart banner stayed up after Reset to default (or any change) put a restart-only setting back to the value the mod is running with.
 - Fix: in singleplayer, the world's owner could look but not apply; Apply stayed greyed out. The owner can now edit, as with Hytale's own admin commands.
 - Fix: opening the window disconnected the player ("CustomUI Set command couldn't set value ... #Label.TooltipText"). Tooltips are now sent as plain text, as the client expects.

@@ -19,6 +19,12 @@
       "pattern": "^[^:\\s]+:[^:\\s]+$",
       "description": "The plugin this sidecar describes, as Group:Name from its manifest.json."
     },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "description": "Optional. The mod's display name for people, for example \"Calendar & Seasons\". Shown in the settings window and in chat instead of the manifest Name. Mod Settings Manager 1.0.0 rejects a sidecar that has this field."
+    },
     "config": {
       "type": "string",
       "minLength": 1,

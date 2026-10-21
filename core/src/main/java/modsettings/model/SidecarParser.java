@@ -64,6 +64,7 @@ public final class SidecarParser {
         if (expectedPlugin != null && !plugin.equalsIgnoreCase(expectedPlugin)) {
             errors.add("$.plugin: \"" + plugin + "\" does not match the plugin it was found for (" + expectedPlugin + ")");
         }
+        String title = root.get("title") instanceof String t && !t.isBlank() ? t.trim() : null;
         String config = (String) root.getOrDefault("config", Sidecar.DEFAULT_CONFIG);
 
         List<Sidecar.Section> sections = new ArrayList<>();
@@ -110,7 +111,7 @@ public final class SidecarParser {
                 (Boolean) k.get("restart"), Boolean.TRUE.equals(k.get("hidden"))));
         }
         if (!errors.isEmpty()) return new Result(null, errors, warnings);
-        return new Result(new Sidecar(Sidecar.FORMAT, plugin, config, List.copyOf(sections), keys), errors, warnings);
+        return new Result(new Sidecar(Sidecar.FORMAT, plugin, title, config, List.copyOf(sections), keys), errors, warnings);
     }
 
     private static String checkDefault(ValueType type, Object def, Double min, Double max, List<String> options) {

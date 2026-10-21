@@ -1,6 +1,7 @@
 {
   "format": 1,
   "plugin": "ModSettingsManager:ModSettingsManager",
+  "title": "Mod Settings Manager",
   "config": "config.json",
   "keys": {
     "AnnounceChanges": {
