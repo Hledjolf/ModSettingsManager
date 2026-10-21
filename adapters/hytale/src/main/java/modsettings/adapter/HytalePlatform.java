@@ -3,6 +3,8 @@ package modsettings.adapter;
 import com.hypixel.hytale.common.plugin.PluginManifest;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.Constants;
+import com.hypixel.hytale.server.core.modules.singleplayer.SingleplayerModule;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
@@ -82,6 +84,9 @@ public final class HytalePlatform implements Platform {
 
     @Override
     public boolean canEdit(UUID player) {
+        // In singleplayer the world's owner is not an operator, but vanilla's own admin commands let the owner
+        // through; do the same, or the host could never apply a change in their own world.
+        if (Constants.SINGLEPLAYER && SingleplayerModule.isOwner(player)) return true;
         PermissionsModule perms = PermissionsModule.get();
         return perms != null && perms.hasPermission(player, SettingsController.PERMISSION);
     }

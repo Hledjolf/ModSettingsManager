@@ -64,7 +64,7 @@ Nested objects show up as one read-only row, unless the mod's sidecar names a ke
 
 Anyone can open the window and look. Applying a change needs one of:
 
-- operator status (`/op add <player>`; in singleplayer the world's owner is an operator);
+- operator status (`/op add <player>`), or being the owner of a singleplayer world;
 - the permission `modsettings.edit` (for example `/perm user add <uuid> modsettings.edit`).
 
 Players without either see the window with Apply disabled. The server checks again on every Apply, and a refused attempt is logged.
