@@ -1,5 +1,4 @@
 # Allow-list: the repo holds only what builds and installs the mod.
-# Design docs, page kit, tools, tests and test fixtures stay local.
 /*
 !/.gitignore
 !/.gitattributes
@@ -13,9 +12,20 @@
 !/gradlew.bat
 !/gradle/
 !/schema/
-!/src/
-/src/*
-!/src/main/
+!/core/
+/core/*
+!/core/src/
+!/core/build.gradle.kts
+/core/src/*
+!/core/src/main/
+!/adapters/
+/adapters/*
+!/adapters/hytale/
+/adapters/hytale/*
+!/adapters/hytale/src/
+!/adapters/hytale/build.gradle.kts
+/adapters/hytale/src/*
+!/adapters/hytale/src/main/
 !/docs/
 /docs/*
 !/docs/SIDECAR.md

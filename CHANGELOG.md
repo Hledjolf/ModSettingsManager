@@ -15,6 +15,7 @@ Small fixes found while testing against a real mod.
 - **Put-back warnings in commands:** `/modsettings list` tags the mod `[put back]`, and `show` prints the values the mod put back.
 - **Docs:** commas and square brackets can't be typed in a `set` value (the window can); the README and sidecar guide no longer imply untouched lists and objects keep their layout (values are kept, layout may be normalized); a new "If your mod saves its config" note for mods that use the server's config codec.
 - **Build:** a `checkNoProjectMarks` guard in `check`.
+- Source reorganized into a game-agnostic core and a Hytale adapter; no change for server owners.
 
 ## 1.0.0 (2026-10-20), Hytale 0.7.2
 

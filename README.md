@@ -125,6 +125,10 @@ Some mods save their in-memory settings when the server stops. That overwrites a
 
 Your mod already works with Mod Settings Manager if it keeps a `config.json` in its data folder. To add labels, descriptions, sections, ranges, dropdowns and defaults, ship a sidecar file. To apply changes without a restart, add one public method. Neither needs a dependency, and both are ignored when Mod Settings Manager isn't installed. See [docs/SIDECAR.md](docs/SIDECAR.md) and the schema in [schema/settings-sidecar.schema.json](schema/settings-sidecar.schema.json).
 
+## Project layout
+
+`core/` is game-agnostic plain Java: sidecar parsing, control inference, the JSON reader and writer, change diffing, the settings controller and the window layout. `adapters/hytale/` is the Hytale mod (plugin class, commands, window pages, `.ui` documents and manifest); it builds into a single jar with `core/` merged in. Versions for other games can be added as further folders under `adapters/`.
+
 ## Building from source
 
 Source: https://github.com/Hledjolf/ModSettingsManager. Report problems at https://github.com/Hledjolf/ModSettingsManager/issues.
@@ -136,7 +140,7 @@ Java 25 JDK. The build compiles against your local `HytaleServer.jar`, which is 
 ./gradlew release               # build/release/ModSettingsManager-1.0.1.jar and .zip (runs check first)
 ```
 
-Every Hytale API call is in the package `modsettings.adapter`, plus the plugin class `modsettings.ModSettingsPlugin`. `checkAdapterBoundary` fails the build otherwise, so a Hytale update breaks only that package. Everything else (sidecar parsing, control inference, the JSON writer, change diffing, the window's layout) is plain Java.
+Every Hytale API call is in `adapters/hytale/`: the package `modsettings.adapter` and the plugin class `modsettings.ModSettingsPlugin`. `checkAdapterBoundary` fails the build if anything under `core/` names the Hytale API, so a Hytale update breaks only the adapter. Everything else (sidecar parsing, control inference, the JSON writer, change diffing, the window's layout) is plain Java.
 
 ## License
 
