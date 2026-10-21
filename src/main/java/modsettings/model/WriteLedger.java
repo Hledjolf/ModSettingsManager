@@ -20,7 +20,16 @@ public final class WriteLedger {
     public record Entry(String plugin, String file, String key, Object value, String boot, String time) {}
 
     /** A value a mod put back: what was written and what the file holds now. */
-    public record Revert(String plugin, String file, String key, Object wrote, Object now, boolean missing) {}
+    public record Revert(String plugin, String file, String key, Object wrote, Object now, boolean missing) {
+        /** {@code Key (written 5, now 0)}, long values shortened. */
+        public String describe() {
+            return key + " (written " + cut(modsettings.json.Json.write(wrote)) + ", now " + (missing ? "missing" : cut(modsettings.json.Json.write(now))) + ")";
+        }
+
+        private static String cut(String s) {
+            return s.length() <= 40 ? s : s.substring(0, 37) + "...";
+        }
+    }
 
     private final Path store;
     private final List<Entry> entries = new ArrayList<>();

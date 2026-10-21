@@ -22,7 +22,7 @@ public final class Changes {
         LIVE,
         /** It returned false: restart needed. */
         RESTART,
-        /** It threw: treated as restart needed. */
+        /** It threw: the mod rejected the values. They are saved, but a restart will not apply them. */
         FAILED
     }
 
@@ -58,7 +58,9 @@ public final class Changes {
      *   <li>a key whose sidecar entry says {@code "restart": true} always does;</li>
      *   <li>no hook: every key except those with {@code "restart": false} does;</li>
      *   <li>the hook returned true: no other key does;</li>
-     *   <li>the hook returned false or threw: every changed key does.</li>
+     *   <li>the hook returned false: every changed key does;</li>
+     *   <li>the hook threw: only keys with {@code "restart": true} do. The rest are "could not apply" (see
+     *       {@link #failedKeys}), since a restart does not fix a value the mod rejected.</li>
      * </ul>
      */
     public static Set<String> restartKeys(List<Change> changes, Sidecar sidecar, HookOutcome outcome) {
@@ -68,10 +70,24 @@ public final class Changes {
             boolean restart = switch (outcome) {
                 case MISSING -> !Boolean.FALSE.equals(flag);
                 case LIVE -> Boolean.TRUE.equals(flag);
-                case RESTART, FAILED -> true;
+                case RESTART -> true;
+                case FAILED -> Boolean.TRUE.equals(flag);
             };
             if (restart) out.add(ch.key());
         }
         return out;
+    }
+
+    /** The changed keys a throwing hook could not apply: every key that is not already waiting for a restart. */
+    public static Set<String> failedKeys(List<Change> changes, Set<String> restartKeys, HookOutcome outcome) {
+        Set<String> out = new LinkedHashSet<>();
+        if (outcome != HookOutcome.FAILED) return out;
+        for (Change ch : changes) if (!restartKeys.contains(ch.key())) out.add(ch.key());
+        return out;
+    }
+
+    /** "1 change takes effect" / "2 changes take effect" (the caller adds the rest of the sentence). */
+    public static String takeEffect(int n) {
+        return n + (n == 1 ? " change takes" : " changes take") + " effect";
     }
 }

@@ -11,7 +11,7 @@ import modsettings.json.Json;
 
 /**
  * A config file on disk. Reading keeps key order and every key; writing keeps the file's indent, saves
- * the old file as {@code <name>.bak}, writes a temp file next to it and renames it over the original, so
+ * the old file as {@code <name>.msm-bak} (not {@code .bak}, which the server's own config codec uses), writes a temp file next to it and renames it over the original, so
  * a crash mid-write never leaves a half-written config.
  */
 public final class ConfigFile {
@@ -26,7 +26,7 @@ public final class ConfigFile {
     }
 
     public static Path backupOf(Path file) {
-        return file.resolveSibling(file.getFileName() + ".bak");
+        return file.resolveSibling(file.getFileName() + ".msm-bak");
     }
 
     /** Writes {@code config} to {@code file} safely (see the class comment). */

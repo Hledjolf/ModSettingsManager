@@ -32,6 +32,8 @@ import modsettings.model.Changes.HookOutcome;
 /** {@link Platform} on the Hytale server: plugins from the PluginManager, permissions, the reflective hook. */
 public final class HytalePlatform implements Platform {
     public static final String HOOK = "onSettingsChanged";
+    /** A hook slower than this logs one warning: it stalls the world thread. */
+    static final long SLOW_HOOK_MS = 1000;
 
     private final HytaleLogger logger;
 
@@ -116,15 +118,20 @@ public final class HytalePlatform implements Platform {
         if (m == null) return CompletableFuture.completedFuture(HookOutcome.MISSING);
         CompletableFuture<HookOutcome> f = new CompletableFuture<>();
         Runnable call = () -> {
+            long t0 = System.nanoTime();
             try {
                 Object r = m.invoke(p, changed);
                 f.complete(Boolean.TRUE.equals(r) ? HookOutcome.LIVE : HookOutcome.RESTART);
             } catch (InvocationTargetException e) {
-                logger.atWarning().withCause(e.getCause()).log("[ModSettingsManager] %s.%s threw; its changes are treated as needing a restart", pluginId, HOOK);
+                Throwable cause = e.getCause() == null ? e : e.getCause();
+                logger.atWarning().withCause(cause).log("[ModSettingsManager] %s.%s threw: %s. The values are saved, but the mod could not apply them.", pluginId, HOOK, cause);
                 f.complete(HookOutcome.FAILED);
             } catch (Throwable t) {
-                logger.atWarning().withCause(t).log("[ModSettingsManager] could not call %s.%s", pluginId, HOOK);
+                logger.atWarning().withCause(t).log("[ModSettingsManager] could not call %s.%s: %s", pluginId, HOOK, t);
                 f.complete(HookOutcome.FAILED);
+            } finally {
+                long ms = (System.nanoTime() - t0) / 1_000_000;
+                if (ms > SLOW_HOOK_MS) logger.atWarning().log("[ModSettingsManager] %s.%s took %d ms on the world thread; a hook should return quickly.", pluginId, HOOK, ms);
             }
         };
         World world = Universe.get() == null ? null : Universe.get().getDefaultWorld();

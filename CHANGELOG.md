@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.1 (unreleased), Hytale 0.7.2
+
+Small fixes found while testing against a real mod.
+
+- **A hook that throws is no longer reported as "restart needed".** The mod rejected the value, and a restart will not apply it. The window status and banner now say "Saved, but <mod> could not apply: <settings>. See the server log."; `/modsettings set` prints "Could not apply: <keys>"; `/modsettings list` shows `[could not apply]`; the mod list shows "(not applied)"; the log line and chat notice carry the same wording. The value is still saved before the hook runs, as before. A key marked `"restart": true` still waits for a restart. The exception message is logged at WARN.
+- **Message grammar:** "1 change takes effect after a restart", "2 changes take effect after a restart"; a single change that waits reads "It takes effect after a restart".
+- **Slow hooks:** a hook that takes longer than 1 second logs one WARN naming the plugin and the time, since it stalls the world thread.
+- **README:** a note on typing values in chat or the console (double the backslashes, square brackets, runs of spaces).
+- **Step grid:** `+`/`-` from a bound that is not a multiple of the step goes to the nearest multiple of the step (min 0.001, step 1: `+` gives 1, not 1.001). Documented in `docs/SIDECAR.md`.
+- **No false "live":** a mod without a hook is never told "All in effect now". The message reads "<Mod> has no live hook. It takes effect after a restart, unless the mod re-reads its file while running."
+- **Wrong-typed values can be fixed:** a file value that doesn't match the sidecar's `type` gets an editable control of the declared type, with the hint `the file holds "abc", not a whole number; fix this value`, instead of a read-only row. "not a int" is now "not a whole number" (also "true or false", "a number", "text").
+- **Backup renamed:** the backup is `config.json.msm-bak`. The server's config codec writes its own `config.json.bak` on every save and overwrote ours.
+- **Put-back warnings in commands:** `/modsettings list` tags the mod `[put back]`, and `show` prints the values the mod put back.
+- **Docs:** commas and square brackets can't be typed in a `set` value (the window can); the README and sidecar guide no longer imply untouched lists and objects keep their layout (values are kept, layout may be normalized); a new "If your mod saves its config" note for mods that use the server's config codec.
+- **Build:** a `checkNoProjectMarks` guard in `check`.
+
 ## 1.0.0 (2026-10-20), Hytale 0.7.2
 
 First release.

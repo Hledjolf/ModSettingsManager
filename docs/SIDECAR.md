@@ -61,11 +61,15 @@ Every field is optional.
 | `section` | The `id` of one of your sections. Keys without a section, and keys the sidecar doesn't list, go under "Other". |
 | `type` | `bool`, `int`, `float`, `enum` or `string`. Without it, the type is inferred from the value in the file. |
 | `min`, `max` | The allowed range for `int` and `float`. Shown next to the field; Apply refuses values outside it. |
-| `step` | How far the `-`/`+` buttons move an `int` or `float`. Without it: 1 for `int`, and one unit of the default's last decimal for `float` (`0.5` gives 0.1). |
+| `step` | How far the `-`/`+` buttons move an `int` or `float`. Without it: 1 for `int`, and one unit of the default's last decimal for `float` (`0.5` gives 0.1). Stepping from a `min` or `max` that isn't a multiple of the step goes to the nearest multiple of the step (`min` 0.001, `step` 1: `+` gives 1, not 1.001); after that, steps are plain. |
 | `options` | The allowed values, as strings. Shown as a dropdown. `options` alone implies `type: "enum"`. |
 | `default` | The value **Reset to default** fills in. It must fit `type`, `min`, `max` and `options`. |
 | `restart` | `true`: the change takes effect only after a restart. `false`: your mod picks it up while running (by re-reading the file, or through the hook). Leave it out if unsure. |
 | `hidden` | `true`: never shown. Hiding an object key hides everything inside it. |
+
+### A value of the wrong type
+
+If the file holds a value that doesn't match the sidecar's `type` (text where `type` is `int`), the key still gets the control of the declared type, with the hint `the file holds "abc", not a whole number; fix this value`. Applying a valid value (or Reset to default) repairs the file.
 
 ### Keys you don't list
 
@@ -115,9 +119,11 @@ public boolean onSettingsChanged(java.util.Map<String, Object> changed) {
 
 - **When:** right after Mod Settings Manager has written your config file.
 - **The argument:** each changed key (dotted for nested ones) mapped to its new value, as a JSON-decoded `Boolean`, `Long`, `Double` or `String`. The map is read-only.
-- **The return value:** return `true` if every change took effect live. Return `false`, or throw, to mean "restart needed"; the window then shows the restart banner for those keys. A throw is logged with its stack trace.
+- **The return value:** return `true` if every change took effect live. Return `false` to mean "restart needed"; the window then shows the restart banner for those keys.
+- **Throwing:** throw only for a value your mod rejects. The value is already saved, because the file is written before the hook runs, and a restart would not help. Mod Settings Manager reports this as "Saved, but <your mod> could not apply: <settings>. See the server log." (not as a restart), logs your exception message at WARN, and shows the setting as not applied until a later change goes through. A key marked `"restart": true` in the sidecar still waits for a restart.
+- **Be quick:** the hook runs on the world thread. One that takes over 1 second gets a WARN in the log naming your mod and the time.
 - **Threading:** the call is made on the server's default world thread.
-- **Without the hook:** changes to keys without `"restart": false` in your sidecar are treated as needing a restart.
+- **Without the hook:** changes to keys without `"restart": false` in your sidecar are treated as needing a restart. Keys marked `"restart": false` are your promise that the mod re-reads the file while running; Mod Settings Manager can't check it, so it never says "All in effect now" for a mod without a hook. It says "<Mod> has no live hook. It takes effect after a restart, unless the mod re-reads its file while running."
 
 The method takes only JDK types, so your mod compiles and runs the same with or without Mod Settings Manager.
 
@@ -127,17 +133,22 @@ The method takes only JDK types, so your mod compiles and runs the same with or 
 | --- | --- | --- | --- |
 | No hook | restart | live | restart |
 | Hook returns `true` | restart | live | live |
-| Hook returns `false` or throws | restart | restart | restart |
+| Hook returns `false` | restart | restart | restart |
+| Hook throws | restart | could not apply | could not apply |
 
 ### If your mod saves its config on shutdown
 
 Then an edit made while the server runs is overwritten when it stops. Mod Settings Manager detects this after the next restart and warns the server owner, but the edit is lost. To avoid it, either don't write the config on shutdown, or add the hook and update your in-memory config from the file in it.
 
+### If your mod saves its config
+
+Mods that keep their settings with the server's own config codec (`withConfig` / `Config.save()`) rewrite the whole file whenever they save: keys the codec doesn't know are dropped, keys are put back in the codec's order, and the old file is copied to `config.json.bak` (Mod Settings Manager's own backup is `config.json.msm-bak`, so the two don't collide). Loading never changes the file. If such a mod saves on shutdown, edits made while the server runs are put back, and Mod Settings Manager warns after the restart. A value of the wrong type in a `withConfig` file stops the server from booting, so edit these files only through the window or with care.
+
 ## How the file is written
 
 - Only the changed keys are written, into the file as it is at that moment, so hand edits made while the window was open are kept.
-- Key order, keys Mod Settings Manager doesn't know about, and the file's indentation are kept. Numbers keep their style: a value written as `5` stays a whole number, and one written as `5.0` keeps its fraction.
-- The old file is saved as `config.json.bak`. The new one is written to a temporary file and renamed over the original.
+- Key order, keys Mod Settings Manager doesn't know about, the file's indentation and every value are kept. The layout of lists and objects (including ones no one touched) may be normalized: short lists of plain values go on one line, longer ones one item per line, and a hand-written one-line object is expanded. Numbers keep their style: a value written as `5` stays a whole number, and one written as `5.0` keeps its fraction.
+- The old file is saved as `config.json.msm-bak`, not `.bak`, which the server's own config codec uses. The new one is written to a temporary file and renamed over the original.
 - Each change gets a line in Mod Settings Manager's `changes.log`.
 
 ## Checklist

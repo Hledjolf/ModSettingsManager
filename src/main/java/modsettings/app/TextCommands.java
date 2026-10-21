@@ -54,7 +54,9 @@ public final class TextCommands {
                 out.add(mods.size() + (mods.size() == 1 ? " mod" : " mods") + " with settings:");
                 for (ModEntry m : mods) {
                     String tags = (m.hasSidecar() ? " [sidecar]" : m.sidecarRejected() ? " [sidecar rejected]" : "") + (m.hasHook() ? " [live]" : "")
-                        + (controller.restartPendingKeys(m.id()).isEmpty() ? "" : " [restart needed]");
+                        + (controller.restartPendingKeys(m.id()).isEmpty() ? "" : " [restart needed]")
+                        + (controller.couldNotApplyKeys(m.id()).isEmpty() ? "" : " [could not apply]")
+                        + (controller.reverts(m.id()).isEmpty() ? "" : " [put back]");
                     out.add("  " + m.id() + (m.version() == null ? "" : " " + m.version()) + tags);
                 }
                 return done(out);
@@ -77,6 +79,13 @@ public final class TextCommands {
                 }
                 List<String> pending = controller.restartPendingKeys(m.get().id());
                 if (!pending.isEmpty()) out.add("Restart needed for: " + String.join(", ", pending));
+                List<String> rejected = controller.couldNotApplyKeys(m.get().id());
+                if (!rejected.isEmpty()) out.add("Could not apply (saved, but the mod rejected them; see the server log): " + String.join(", ", rejected));
+                var reverts = controller.reverts(m.get().id());
+                if (!reverts.isEmpty()) {
+                    out.add("Put back: after the last restart this mod put back " + String.join(", ", reverts.stream().map(r -> r.describe()).toList())
+                        + ". It probably saves its config when the server stops: change these while the server is stopped.");
+                }
                 return done(out);
             }
             case "set" -> {
@@ -89,6 +98,7 @@ public final class TextCommands {
                     out.add(r.message());
                     if (r.errors().size() > 1) for (String e : r.errors()) out.add("  " + e);
                     if (!r.restartKeys().isEmpty()) out.add("Restart needed for: " + String.join(", ", r.restartKeys()));
+                    if (!r.failedKeys().isEmpty()) out.add("Could not apply: " + String.join(", ", r.failedKeys()));
                     return out;
                 });
             }

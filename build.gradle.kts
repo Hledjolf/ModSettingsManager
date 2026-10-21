@@ -3,7 +3,7 @@
 val hytaleServerJar = (findProperty("hytaleServerJar") as String?)
     ?: "${System.getenv("APPDATA")}/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"
 
-version = "1.0.0"
+version = "1.0.1"
 
 allprojects {
     apply(plugin = "java")
@@ -88,9 +88,43 @@ val checkJarContents by tasks.registering {
     }
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// checkNoProjectMarks: this mod is a standalone product. No tracked, shipped or page-kit text may name the
+// author's other projects. The words are assembled from parts so this file does not match itself.
+// ---------------------------------------------------------------------------------------------------------
+val checkNoProjectMarks by tasks.registering {
+    group = "verification"
+    description = "Fails if a tracked or shipped file names another project of the author."
+    dependsOn(tasks.named("jar"))
+    val jarFile = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+    val roots = listOf("src/main", "schema", "gradle", "docs/page")
+    val singles = listOf("README.md", "CHANGELOG.md", "LICENSE", "build.gradle.kts", "settings.gradle.kts", "gradle.properties", ".gitignore", ".gitattributes", "docs/SIDECAR.md")
+    doLast {
+        val words = listOf("arch" + "mage", "spell" + "bound", "master" + " of " + "magic")
+        val pattern = Regex(words.joinToString("|") { Regex.escape(it) }, RegexOption.IGNORE_CASE)
+        val textExt = setOf("java", "json", "md", "txt", "bbcode", "kts", "properties", "ui", "gradle", "sh", "py", "")
+        val files = singles.map { File(projectDir, it) }.filter { it.isFile } +
+            roots.flatMap { r -> File(projectDir, r).walkTopDown().filter { it.isFile && it.extension.lowercase() in textExt }.toList() }
+        val hits = mutableListOf<String>()
+        for (f in files) {
+            if (f.extension == "jar") continue
+            val text = f.readText(Charsets.UTF_8)
+            if (pattern.containsMatchIn(text)) hits += f.relativeTo(projectDir).invariantSeparatorsPath
+        }
+        java.util.zip.ZipFile(jarFile.get().asFile).use { zf ->
+            zf.entries().asSequence().filter { !it.isDirectory }.forEach { e ->
+                val bytes = zf.getInputStream(e).readAllBytes()
+                if (pattern.containsMatchIn(String(bytes, Charsets.ISO_8859_1)) || pattern.containsMatchIn(e.name)) hits += "jar:" + e.name
+            }
+        }
+        if (hits.isNotEmpty()) throw GradleException("Names of other projects found (not allowed in a standalone mod):\n" + hits.joinToString("\n") { " - $it" })
+    }
+}
+
 tasks.named("check") {
     dependsOn(checkAdapterBoundary)
     dependsOn(checkJarContents)
+    dependsOn(checkNoProjectMarks)
 }
 
 // Fixtures compile against the mod itself (their scenarios drive its controller).

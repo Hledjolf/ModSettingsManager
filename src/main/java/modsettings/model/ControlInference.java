@@ -108,16 +108,20 @@ public final class ControlInference {
             kind = inferred(value);
         } else {
             kind = switch (type) {
-                case BOOL -> value instanceof Boolean ? Kind.BOOL : null;
-                case INT -> value instanceof Long || value instanceof Integer || value instanceof Double d && d == Math.rint(d) && !d.isInfinite() ? Kind.INT : null;
-                case FLOAT -> value instanceof Number ? Kind.FLOAT : null;
-                case ENUM -> value instanceof String ? Kind.ENUM : null;
-                case STRING -> value instanceof String ? Kind.STRING : null;
+                case BOOL -> Kind.BOOL;
+                case INT -> Kind.INT;
+                case FLOAT -> Kind.FLOAT;
+                case ENUM -> Kind.ENUM;
+                case STRING -> Kind.STRING;
             };
-            if (kind == null) {
-                kind = Kind.READONLY;
-                note = "the file holds " + Json.write(value) + ", not a " + type.id;
-            }
+            // A value of the wrong type still gets the declared control, so it can be fixed.
+            boolean fits = switch (type) {
+                case BOOL -> value instanceof Boolean;
+                case INT -> value instanceof Long || value instanceof Integer || value instanceof Double d && d == Math.rint(d) && !d.isInfinite();
+                case FLOAT -> value instanceof Number;
+                case ENUM, STRING -> value instanceof String;
+            };
+            if (!fits) note = "the file holds " + Json.write(value) + ", not " + type.described() + "; fix this value";
         }
         if (kind == Kind.ENUM) {
             options = new ArrayList<>(spec.options() == null ? List.of() : spec.options());

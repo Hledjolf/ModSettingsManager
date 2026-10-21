@@ -294,7 +294,7 @@ public final class SettingsWindow {
             ModEntry m = list.get(i);
             String sel = "#ModList[" + i + "]";
             ops.append("#ModList", MOD_ROW);
-            String mark = !controller.restartPendingKeys(m.id()).isEmpty() ? "  (restart)" : !controller.reverts(m.id()).isEmpty() ? "  (warning)" : "";
+            String mark = !controller.restartPendingKeys(m.id()).isEmpty() ? "  (restart)" : !controller.couldNotApplyKeys(m.id()).isEmpty() ? "  (not applied)" : !controller.reverts(m.id()).isEmpty() ? "  (warning)" : "";
             ops.text(sel + " #Button", m.name() + mark);
             ops.set(sel + " #Button.Disabled", selected != null && selected.id().equals(m.id()));
             ops.bind(sel + " #Button", "Activating", Map.of("Action", "select", "Mod", m.id()));
@@ -327,8 +327,15 @@ public final class SettingsWindow {
         ops.text("#SidecarNote", sidecarNote(selected));
 
         List<String> pending = controller.restartPendingKeys(selected.id());
-        ops.visible("#RestartBanner", !pending.isEmpty());
-        ops.text("#RestartText", pending.isEmpty() ? "" : "Restart needed for: " + labels(pending) + ". These changes are saved and take effect after the server restarts.");
+        List<String> rejected = controller.couldNotApplyKeys(selected.id());
+        ops.visible("#RestartBanner", !pending.isEmpty() || !rejected.isEmpty());
+        StringBuilder banner = new StringBuilder();
+        if (!rejected.isEmpty()) banner.append("Saved, but ").append(selected.name()).append(" could not apply: ").append(labels(rejected)).append(". See the server log.");
+        if (!pending.isEmpty()) {
+            if (banner.length() > 0) banner.append(' ');
+            banner.append("Restart needed for: ").append(labels(pending)).append(". These changes are saved and take effect after the server restarts.");
+        }
+        ops.text("#RestartText", banner.toString());
 
         List<WriteLedger.Revert> reverts = controller.reverts(selected.id());
         ops.visible("#RevertBanner", !reverts.isEmpty());
@@ -444,8 +451,7 @@ public final class SettingsWindow {
         for (int i = 0; i < reverts.size(); i++) {
             WriteLedger.Revert r = reverts.get(i);
             if (i > 0) b.append(", ");
-            b.append(r.key()).append(" (written ").append(truncate(Json.write(r.wrote()), 40)).append(", now ")
-                .append(r.missing() ? "missing" : truncate(Json.write(r.now()), 40)).append(')');
+            b.append(r.describe());
         }
         return b.append(". It probably saves its config when the server stops: change these while the server is stopped.").toString();
     }

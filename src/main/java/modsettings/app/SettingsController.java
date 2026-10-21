@@ -49,6 +49,8 @@ public final class SettingsController {
     private volatile boolean announce;
     /** plugin id -> key -> value waiting for a restart. */
     private final Map<String, Map<String, Object>> restartPending = new ConcurrentHashMap<>();
+    /** plugin id -> keys saved but rejected by the mod's hook (it threw). */
+    private final Map<String, Set<String>> couldNotApply = new ConcurrentHashMap<>();
     /** plugin id -> values a mod put back after the last restart. */
     private final Map<String, List<WriteLedger.Revert>> reverts = new ConcurrentHashMap<>();
 
@@ -221,7 +223,7 @@ public final class SettingsController {
         }
         if (!errors.isEmpty()) {
             return CompletableFuture.completedFuture(new ApplyResult(ApplyResult.Status.INVALID,
-                errors.size() == 1 ? errors.get(0) : errors.size() + " values are not valid; nothing was saved.", errors, List.of(), Set.of(), null));
+                errors.size() == 1 ? errors.get(0) : errors.size() + " values are not valid; nothing was saved.", errors, List.of(), Set.of(), Set.of(), null));
         }
         List<Changes.Change> wanted = Changes.diff(seen.controls(), parsed);
         if (wanted.isEmpty()) return CompletableFuture.completedFuture(ApplyResult.of(ApplyResult.Status.NOTHING, "Nothing to apply: no value differs from the file."));
@@ -266,25 +268,57 @@ public final class SettingsController {
             : CompletableFuture.completedFuture(Changes.HookOutcome.MISSING);
         return hook.thenApply(outcome -> {
             Set<String> restart = Changes.restartKeys(applied, mod.sidecar(), outcome);
+            Set<String> failed = Changes.failedKeys(applied, restart, outcome);
             Map<String, Object> pending = restartPending.computeIfAbsent(mod.id(), k -> Collections.synchronizedMap(new LinkedHashMap<>()));
+            Set<String> failedNow = couldNotApply.computeIfAbsent(mod.id(), k -> Collections.synchronizedSet(new LinkedHashSet<>()));
             for (Changes.Change ch : applied) {
                 if (restart.contains(ch.key())) pending.put(ch.key(), ch.newValue());
                 else pending.remove(ch.key());
+                if (failed.contains(ch.key())) failedNow.add(ch.key());
+                else failedNow.remove(ch.key());
             }
-            List<String> live = applied.stream().map(Changes.Change::key).filter(k -> !restart.contains(k)).toList();
+            List<String> live = applied.stream().map(Changes.Change::key).filter(k -> !restart.contains(k) && !failed.contains(k)).toList();
             platform.info("[ModSettingsManager] " + actor.describe() + " changed " + mod.id() + ": "
                 + String.join(", ", applied.stream().map(c -> c.key() + "=" + Json.write(c.newValue())).toList())
                 + " (hook " + outcome.name().toLowerCase(Locale.ROOT) + "; live: " + (live.isEmpty() ? "none" : String.join(", ", live))
-                + "; after restart: " + (restart.isEmpty() ? "none" : String.join(", ", restart)) + ")");
+                + "; after restart: " + (restart.isEmpty() ? "none" : String.join(", ", restart))
+                + (failed.isEmpty() ? "" : "; could not apply: " + String.join(", ", failed)) + ")");
             if (announce) {
                 platform.tellEditors("[Mod Settings] " + actor.name() + " changed " + mod.name() + ": "
                     + String.join(", ", applied.stream().map(c -> c.key() + " = " + Values.display(c.newValue())).toList())
-                    + (restart.isEmpty() ? "" : " (restart needed)"));
+                    + (failed.isEmpty() ? "" : " (saved, but " + mod.name() + " could not apply it)") + (restart.isEmpty() ? "" : " (restart needed)"));
             }
-            String msg = "Saved " + applied.size() + (applied.size() == 1 ? " change" : " changes") + " to " + mod.configFile().getFileName() + ". "
-                + (restart.isEmpty() ? "All in effect now." : restart.size() == applied.size() ? "They take effect after a restart." : restart.size() + " take effect after a restart.");
-            return new ApplyResult(ApplyResult.Status.WRITTEN, msg, List.of(), List.copyOf(applied), Set.copyOf(restart), outcome);
+            StringBuilder sb = new StringBuilder();
+            if (!failed.isEmpty()) {
+                sb.append("Saved, but ").append(mod.name()).append(" could not apply: ")
+                    .append(String.join(", ", failed.stream().map(k -> labelOf(seen, k)).toList())).append(". See the server log.");
+                if (!restart.isEmpty()) sb.append(' ').append(Changes.takeEffect(restart.size())).append(" after a restart.");
+            } else {
+                sb.append("Saved ").append(applied.size()).append(applied.size() == 1 ? " change" : " changes").append(" to ")
+                    .append(mod.configFile().getFileName()).append(". ");
+                if (restart.isEmpty()) {
+                    if (outcome == Changes.HookOutcome.MISSING) sb.append(mod.name()).append(" has no live hook. It takes effect after a restart, unless the mod re-reads its file while running.");
+                    else sb.append("All in effect now.");
+                }
+                else if (restart.size() == applied.size()) sb.append(applied.size() == 1 ? "It takes effect after a restart." : "They take effect after a restart.");
+                else sb.append(Changes.takeEffect(restart.size())).append(" after a restart.");
+            }
+            return new ApplyResult(ApplyResult.Status.WRITTEN, sb.toString(), List.of(), List.copyOf(applied), Set.copyOf(restart), Set.copyOf(failed), outcome);
         });
+    }
+
+    private static String labelOf(ModView v, String key) {
+        Control c = v.control(key);
+        return c == null ? key : c.label();
+    }
+
+    /** Keys of the mod whose last apply was saved but rejected by its hook (it threw). Ordered, for display. */
+    public List<String> couldNotApplyKeys(String modId) {
+        Set<String> s = couldNotApply.get(modId);
+        if (s == null) return List.of();
+        synchronized (s) {
+            return List.copyOf(s);
+        }
     }
 
     /** {@code /modsettings set}: one key from typed text. */

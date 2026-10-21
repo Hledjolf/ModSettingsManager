@@ -47,11 +47,29 @@ public final class Steps {
      */
     public static double next(Control c, double current, int dir) {
         double step = step(c);
-        double v = clamp(c, current + Integer.signum(dir) * step);
+        double target = current + Integer.signum(dir) * step;
+        Double snapped = offGridBound(c, current, dir, step);
+        if (snapped != null) target = snapped;
+        double v = clamp(c, target);
         int scale = Math.max(decimals(step), c.kind() == Control.Kind.INT ? 0 : decimals(current));
         v = new BigDecimal(Double.toString(v)).setScale(Math.min(scale, MAX_DECIMALS), RoundingMode.HALF_UP).doubleValue();
         if (c.kind() == Control.Kind.INT) v = Math.rint(v);
         return clamp(c, v);
+    }
+
+    /**
+     * Leaving a bound that is not a multiple of the step (min 0.001, step 1): the first step lands on the
+     * nearest multiple of the step in that direction (1), not bound + step (1.001). After that, steps are plain.
+     * Returns null when the rule does not apply.
+     */
+    private static Double offGridBound(Control c, double current, int dir, double step) {
+        boolean up = dir > 0;
+        Double bound = up ? c.min() : c.max();
+        if (bound == null || Math.abs(current - bound) > 1e-12 * Math.max(1.0, Math.abs(bound))) return null;
+        BigDecimal ratio = new BigDecimal(Double.toString(bound)).divide(new BigDecimal(Double.toString(step)), 12, RoundingMode.HALF_UP);
+        if (ratio.stripTrailingZeros().scale() <= 0) return null; // already a multiple
+        BigDecimal k = ratio.setScale(0, up ? RoundingMode.FLOOR : RoundingMode.CEILING).add(up ? BigDecimal.ONE : BigDecimal.ONE.negate());
+        return k.multiply(new BigDecimal(Double.toString(step))).doubleValue();
     }
 
     /** Whether the button for {@code dir} can move the value without leaving the range. */

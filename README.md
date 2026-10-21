@@ -6,7 +6,7 @@ Hytale server 0.7.2. MIT licensed.
 
 ## Install
 
-1. Put `ModSettingsManager-1.0.0.jar` in the server's `mods` folder. For singleplayer, use `%APPDATA%\Hytale\UserData\Mods\`.
+1. Put `ModSettingsManager-1.0.1.jar` in the server's `mods` folder. For singleplayer, use `%APPDATA%\Hytale\UserData\Mods\`.
 2. Start the server once, so each mod writes its `config.json`.
 
 Nothing else is needed. Mod Settings Manager finds every loaded plugin's config at boot.
@@ -73,16 +73,29 @@ Players without either see the window with Apply disabled. The server checks aga
 
 1. Every value is checked first.
 2. The file is read again, so edits made by hand in the meantime are kept, and only the keys you changed are written.
-3. The old file is kept as `config.json.bak`.
+3. The old file is kept as `config.json.msm-bak` (not `.bak`, which the server's own config codec uses).
 4. The new file is written to a temporary file next to it, which is then renamed over the original, so a crash can't leave a half-written config.
-5. Key order, keys Mod Settings Manager doesn't know, and the file's indentation are all kept.
+5. Key order, keys Mod Settings Manager doesn't know, the file's indentation and every value are kept. The layout of lists and objects may be normalized: short lists of plain values are written on one line, longer ones one item per line, and a hand-written one-line object is expanded.
 6. Each change is added to `mods/ModSettingsManager_ModSettingsManager/changes.log`, one line per key: time, player, mod, file, key, old value, new value.
 
 Then, if the mod has the live-apply hook, Mod Settings Manager tells it what changed (on the server's main world thread). The mod says whether the change took effect live. If not, or if the mod has no hook, the change waits for a restart, and the window says so.
 
+If the mod's hook throws, it has rejected the value. The value stays saved, but a restart would not apply it, so the window says "Saved, but <mod> could not apply: <settings>. See the server log." instead of "restart needed".
+
+### Typing values in chat or the console
+
+`/modsettings set <mod> <key> <value>` goes through Hytale's command parser first:
+
+- A backslash is an escape character, so type each one twice: `D:\\Games\\notes` arrives as `D:\Games\notes`. A single backslash is refused by the parser.
+- The parser puts spaces around `[` and `]`, so `[{player}]` is stored as `[ {player} ]`.
+- Mod Settings Manager splits the arguments on spaces, so a run of several spaces becomes one.
+- Commas and square brackets can't be typed in a `set` value at all: Hytale's tokenizer splits them off as separate tokens (a comma comes back as ` , `), and `[]` is refused by the parser before Mod Settings Manager sees it. A value such as `{day} of {monthName}, {year}` can't be set from chat or the console.
+
+The settings window has none of these limits. Use it for paths, templates with commas or square brackets, or text with repeated spaces.
+
 ### After a restart: "the mod put a value back"
 
-Some mods save their in-memory settings when the server stops. That overwrites any edit made while the server was running. Mod Settings Manager remembers what it wrote (in `written.json`). After the next restart it checks each file. If a value went back, it logs a warning and shows a warning banner on that mod. For such a mod, change the setting while the server is stopped, or ask its author to add the live-apply hook.
+Some mods save their in-memory settings when the server stops. That overwrites any edit made while the server was running. Mod Settings Manager remembers what it wrote (in `written.json`). After the next restart it checks each file. If a value went back, it logs a warning, shows a warning banner on that mod, and tags the mod `[put back]` in `/modsettings list` (details in `/modsettings show`). For such a mod, change the setting while the server is stopped, or ask its author to add the live-apply hook.
 
 ## Configuration
 
@@ -98,7 +111,7 @@ Some mods save their in-memory settings when the server stops. That overwrites a
 | File | What |
 | --- | --- |
 | `mods/<Group>_<Name>/config.json` | Each mod's config, as the mod wrote it. Mod Settings Manager edits it in place. |
-| `mods/<Group>_<Name>/config.json.bak` | The config as it was before the last change. |
+| `mods/<Group>_<Name>/config.json.msm-bak` | The config as it was before the last change. |
 | `mods/ModSettingsManager_ModSettingsManager/changes.log` | Every change, one line per key. |
 | `mods/ModSettingsManager_ModSettingsManager/written.json` | Values written since the last restart, for the put-back check. |
 
@@ -120,7 +133,7 @@ Java 25 JDK. The build compiles against your local `HytaleServer.jar`, which is 
 
 ```
 ./gradlew check                 # the adapter-boundary check and the jar-contents check
-./gradlew release               # build/release/ModSettingsManager-1.0.0.jar and .zip (runs check first)
+./gradlew release               # build/release/ModSettingsManager-1.0.1.jar and .zip (runs check first)
 ```
 
 Every Hytale API call is in the package `modsettings.adapter`, plus the plugin class `modsettings.ModSettingsPlugin`. `checkAdapterBoundary` fails the build otherwise, so a Hytale update breaks only that package. Everything else (sidecar parsing, control inference, the JSON writer, change diffing, the window's layout) is plain Java.
