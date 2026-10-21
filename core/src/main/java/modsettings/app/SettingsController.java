@@ -49,6 +49,8 @@ public final class SettingsController {
     private volatile boolean announce;
     /** plugin id -> key -> value waiting for a restart. */
     private final Map<String, Map<String, Object>> restartPending = new ConcurrentHashMap<>();
+    /** For each restart key changed this session, the value the running mod still uses (its value before the first change). */
+    private final Map<String, Map<String, Object>> runningValues = new ConcurrentHashMap<>();
     /** plugin id -> keys saved but rejected by the mod's hook (it threw). */
     private final Map<String, Set<String>> couldNotApply = new ConcurrentHashMap<>();
     /** plugin id -> values a mod put back after the last restart. */
@@ -271,9 +273,14 @@ public final class SettingsController {
             Set<String> failed = Changes.failedKeys(applied, restart, outcome);
             Map<String, Object> pending = restartPending.computeIfAbsent(mod.id(), k -> Collections.synchronizedMap(new LinkedHashMap<>()));
             Set<String> failedNow = couldNotApply.computeIfAbsent(mod.id(), k -> Collections.synchronizedSet(new LinkedHashSet<>()));
+            Map<String, Object> running = runningValues.computeIfAbsent(mod.id(), k -> new ConcurrentHashMap<>());
             for (Changes.Change ch : applied) {
-                if (restart.contains(ch.key())) pending.put(ch.key(), ch.newValue());
-                else pending.remove(ch.key());
+                if (restart.contains(ch.key())) {
+                    // Setting a restart key back to the value the mod is running with needs no restart.
+                    if (!running.containsKey(ch.key()) && ch.oldValue() != null) running.put(ch.key(), ch.oldValue());
+                    if (running.containsKey(ch.key()) && Values.same(null, running.get(ch.key()), ch.newValue())) pending.remove(ch.key());
+                    else pending.put(ch.key(), ch.newValue());
+                } else pending.remove(ch.key());
                 if (failed.contains(ch.key())) failedNow.add(ch.key());
                 else failedNow.remove(ch.key());
             }

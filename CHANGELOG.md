@@ -4,6 +4,7 @@
 
 Small fixes found while testing against a real mod.
 
+- Fix: the restart banner stayed up after Reset to default (or any change) put a restart-only setting back to the value the mod is running with.
 - Fix: in singleplayer, the world's owner could look but not apply; Apply stayed greyed out. The owner can now edit, as with Hytale's own admin commands.
 - Fix: opening the window disconnected the player ("CustomUI Set command couldn't set value ... #Label.TooltipText"). Tooltips are now sent as plain text, as the client expects.
 - **A hook that throws is no longer reported as "restart needed".** The mod rejected the value, and a restart will not apply it. The window status and banner now say "Saved, but <mod> could not apply: <settings>. See the server log."; `/modsettings set` prints "Could not apply: <keys>"; `/modsettings list` shows `[could not apply]`; the mod list shows "(not applied)"; the log line and chat notice carry the same wording. The value is still saved before the hook runs, as before. A key marked `"restart": true` still waits for a restart. The exception message is logged at WARN.
