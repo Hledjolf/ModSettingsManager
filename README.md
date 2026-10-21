@@ -112,8 +112,10 @@ Some mods save their in-memory settings when the server stops. That overwrites a
 | --- | --- |
 | `mods/<Group>_<Name>/config.json` | Each mod's config, as the mod wrote it. Mod Settings Manager edits it in place. |
 | `mods/<Group>_<Name>/config.json.msm-bak` | The config as it was before the last change. |
-| `mods/ModSettingsManager_ModSettingsManager/changes.log` | Every change, one line per key. |
-| `mods/ModSettingsManager_ModSettingsManager/written.json` | Values written since the last restart, for the put-back check. |
+| `changes.log` (in Mod Settings Manager's own folder, see below) | Every change, one line per key. |
+| `written.json` (same folder) | Values written since the last restart, for the put-back check. |
+
+Mod Settings Manager's own folder is `mods/ModSettingsManager_ModSettingsManager/`.
 
 ## Troubleshooting
 
