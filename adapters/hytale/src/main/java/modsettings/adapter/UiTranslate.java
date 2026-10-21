@@ -1,7 +1,6 @@
 package modsettings.adapter;
 
 import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.ui.DropdownEntryInfo;
 import com.hypixel.hytale.server.core.ui.LocalizableString;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
@@ -20,9 +19,9 @@ public final class UiTranslate {
             switch (op) {
                 case UiOps.Set s -> {
                     Object v = s.value();
-                    // Vanilla always sends tooltips as messages; plain strings are fine for .Text and .Value.
-                    if (v instanceof String str && s.selector().endsWith(".TooltipText")) cmd.set(s.selector(), Message.raw(str));
-                    else if (v instanceof String str) cmd.set(s.selector(), str);
+                    // Strings stay strings, tooltips included: a Label's TooltipText is a plain string on the client,
+                    // and sending a Message there disconnects the player ("No parameterless constructor ... System.String").
+                    if (v instanceof String str) cmd.set(s.selector(), str);
                     else if (v instanceof Boolean b) cmd.set(s.selector(), b.booleanValue());
                     else cmd.set(s.selector(), ((Double) v).doubleValue());
                 }

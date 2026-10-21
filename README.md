@@ -2,7 +2,7 @@
 
 An in-game settings window for Hytale servers. It shows every installed mod's `config.json` as checkboxes, number fields, text fields and dropdowns, and saves your changes safely. **It works with mods as they are**: a mod needs no code and no dependency to show up. Mods that want nicer labels, sections and ranges can ship a small optional sidecar file (see [docs/SIDECAR.md](docs/SIDECAR.md)).
 
-Hytale server 0.7.2. MIT licensed.
+Hytale server 0.7.3. MIT licensed.
 
 ## Install
 

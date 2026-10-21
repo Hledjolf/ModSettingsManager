@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.0.1 (unreleased), Hytale 0.7.2
+## 1.0.1 (unreleased), Hytale 0.7.3
 
 Small fixes found while testing against a real mod.
 
+- Fix: opening the window disconnected the player ("CustomUI Set command couldn't set value ... #Label.TooltipText"). Tooltips are now sent as plain text, as the client expects.
 - **A hook that throws is no longer reported as "restart needed".** The mod rejected the value, and a restart will not apply it. The window status and banner now say "Saved, but <mod> could not apply: <settings>. See the server log."; `/modsettings set` prints "Could not apply: <keys>"; `/modsettings list` shows `[could not apply]`; the mod list shows "(not applied)"; the log line and chat notice carry the same wording. The value is still saved before the hook runs, as before. A key marked `"restart": true` still waits for a restart. The exception message is logged at WARN.
 - **Message grammar:** "1 change takes effect after a restart", "2 changes take effect after a restart"; a single change that waits reads "It takes effect after a restart".
 - **Slow hooks:** a hook that takes longer than 1 second logs one WARN naming the plugin and the time, since it stalls the world thread.
