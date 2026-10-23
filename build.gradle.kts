@@ -3,7 +3,7 @@
 // Test fixtures under fixtures/ are local plugins for the headless scenarios and are never shipped.
 plugins { base }
 
-version = "1.0.1"
+version = "1.0.2"
 val modVersion = version.toString()
 
 val hytaleServerJar = (findProperty("hytaleServerJar") as String?)

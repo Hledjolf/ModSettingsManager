@@ -6,7 +6,7 @@ Hytale server 0.7.3. MIT licensed.
 
 ## Install
 
-1. Put `ModSettingsManager-1.0.1.jar` in the server's `mods` folder. For singleplayer, use `%APPDATA%\Hytale\UserData\Mods\`.
+1. Put `ModSettingsManager-1.0.2.jar` in the server's `mods` folder. For singleplayer, use `%APPDATA%\Hytale\UserData\Mods\`.
 2. Start the server once, so each mod writes its `config.json`.
 
 Nothing else is needed. Mod Settings Manager finds every loaded plugin's config at boot.
@@ -140,7 +140,7 @@ Java 25 JDK. The build compiles against your local `HytaleServer.jar`, which is 
 
 ```
 ./gradlew check                 # the adapter-boundary check and the jar-contents check
-./gradlew release               # build/release/ModSettingsManager-1.0.1.jar and .zip (runs check first)
+./gradlew release               # build/release/ModSettingsManager-1.0.2.jar and .zip (runs check first)
 ```
 
 Every Hytale API call is in `adapters/hytale/`: the package `modsettings.adapter` and the plugin class `modsettings.ModSettingsPlugin`. `checkAdapterBoundary` fails the build if anything under `core/` names the Hytale API, so a Hytale update breaks only the adapter. Everything else (sidecar parsing, control inference, the JSON writer, change diffing, the window's layout) is plain Java.
