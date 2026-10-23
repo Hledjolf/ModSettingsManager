@@ -23,15 +23,88 @@ public final class TextCommands {
         this.rediscover = rediscover;
     }
 
-    /** The command's arguments after the command name, split on whitespace. */
+    /** The characters a backslash escapes in a command line, as in Hytale's tokenizer. */
+    private static final String ESCAPABLE = "\"',[]\\";
+
+    /**
+     * The command's arguments after the command name, from the line as typed (before the game's own
+     * tokenizer has unescaped it). Whitespace separates arguments; quotes around a whole argument group it
+     * and are removed; a backslash makes the next {@code " ' , [ ] \} literal. The value of {@code set} is
+     * the rest of the line, so its spaces, commas and brackets arrive as typed.
+     */
     public static List<String> split(String input, List<String> names) {
         List<String> out = new ArrayList<>();
         if (input == null) return out;
         String s = input.strip();
         if (s.startsWith("/")) s = s.substring(1);
-        for (String t : s.split("\\s+")) if (!t.isEmpty()) out.add(t);
-        if (!out.isEmpty() && names.contains(out.get(0).toLowerCase(Locale.ROOT))) out.remove(0);
+        List<Integer> starts = new ArrayList<>();
+        List<String> tokens = tokens(s, starts);
+        int first = !tokens.isEmpty() && names.contains(unquote(tokens.get(0)).toLowerCase(Locale.ROOT)) ? 1 : 0;
+        for (int k = first; k < tokens.size(); k++) {
+            if (out.size() == 3 && out.get(0).equalsIgnoreCase("set")) {
+                out.add(unquote(s.substring(starts.get(k))));
+                break;
+            }
+            out.add(unquote(tokens.get(k)));
+        }
         return out;
+    }
+
+    /** Splits at whitespace outside quotes, skipping escaped characters; records where each token starts. */
+    private static List<String> tokens(String s, List<Integer> starts) {
+        List<String> out = new ArrayList<>();
+        int start = -1;
+        char quote = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (start < 0) {
+                if (Character.isWhitespace(c)) continue;
+                start = i;
+            }
+            if (c == '\\') {
+                i++;
+            } else if (quote != 0) {
+                if (c == quote) quote = 0;
+            } else if (c == '"' || (c == '\'' && i == start)) {
+                // As in Hytale: a double quote opens anywhere, an apostrophe only at the start (so "it's" is a word).
+                quote = c;
+            } else if (Character.isWhitespace(c)) {
+                out.add(s.substring(start, i));
+                starts.add(start);
+                start = -1;
+            }
+        }
+        if (start >= 0) {
+            out.add(s.substring(start));
+            starts.add(start);
+        }
+        return out;
+    }
+
+    /** One argument as meant: quotes around all of it removed, and each escape replaced by its character. */
+    static String unquote(String t) {
+        int from = 0, to = t.length();
+        if (to >= 2 && (t.charAt(0) == '"' || t.charAt(0) == '\'') && closingQuote(t) == to - 1) {
+            from = 1;
+            to--;
+        }
+        StringBuilder b = new StringBuilder(to - from);
+        for (int i = from; i < to; i++) {
+            char c = t.charAt(i);
+            if (c == '\\' && i + 1 < to && ESCAPABLE.indexOf(t.charAt(i + 1)) >= 0) c = t.charAt(++i);
+            b.append(c);
+        }
+        return b.toString();
+    }
+
+    private static int closingQuote(String t) {
+        char q = t.charAt(0);
+        for (int i = 1; i < t.length(); i++) {
+            char c = t.charAt(i);
+            if (c == '\\') i++;
+            else if (c == q) return i;
+        }
+        return -1;
     }
 
     public static List<String> usage() {

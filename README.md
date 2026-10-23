@@ -84,14 +84,15 @@ If the mod's hook throws, it has rejected the value. The value stays saved, but 
 
 ### Typing values in chat or the console
 
-`/modsettings set <mod> <key> <value>` goes through Hytale's command parser first:
+In `/modsettings set <mod> <key> <value>`, the value is everything after the key, as typed: spaces, commas and square brackets included, so `{day} of {monthName}, {year}` and `[{player}]` arrive unchanged. Hytale's command parser still reads the line first, so:
 
-- A backslash is an escape character, so type each one twice: `D:\\Games\\notes` arrives as `D:\Games\notes`. A single backslash is refused by the parser.
-- The parser puts spaces around `[` and `]`, so `[{player}]` is stored as `[ {player} ]`.
-- Mod Settings Manager splits the arguments on spaces, so a run of several spaces becomes one.
-- Commas and square brackets can't be typed in a `set` value at all: Hytale's tokenizer splits them off as separate tokens (a comma comes back as ` , `), and `[]` is refused by the parser before Mod Settings Manager sees it. A value such as `{day} of {monthName}, {year}` can't be set from chat or the console.
+- A backslash is an escape character. Type each one twice: `D:\\Games\\notes` arrives as `D:\Games\notes`. A single backslash before anything other than `\ " ' , [ ]` is refused by the parser.
+- Quotes around the whole value are removed: `"two  words"` arrives as `two  words`. To keep quotes, escape them: `\"quoted\"` arrives as `"quoted"`. Quotes inside a value (`say "hi" now`) are kept.
+- An empty `[]`, a `[` inside another `[ ]`, a `]` with no `[` before it, and an unclosed quote are refused by the parser. Escape them (`\[`, `\]`, `\"`) to type them.
 
-The settings window has none of these limits. Use it for paths, templates with commas or square brackets, or text with repeated spaces.
+On the server console, the console itself removes backslashes before Hytale's parser sees the line: `D:\\Games\\notes` typed there arrives as `D:Gamesnotes`. Escapes therefore don't work from the console. Set values that need a backslash, or an escaped quote or bracket, from chat or the settings window.
+
+The settings window has none of these limits.
 
 ### After a restart: "the mod put a value back"
 

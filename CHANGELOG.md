@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Fix: `/modsettings set` read its value from the line Hytale had already tokenized, with escapes removed and the tokens joined again. Quotes typed to keep spaces were saved as part of the value (`"two  words"` became `"two words"`, quotes included), an escaped `\"` could not be told from a quote, and commas and square brackets came back with spaces around them (`a, b` as `a , b`). The value is now read from the line as typed, with Hytale's escapes applied once: everything after the key is the value, spaces, commas and brackets included; quotes around the whole value are removed; `\\`, `\"`, `\'`, `\,`, `\[` and `\]` give the character.
+- Fix: the JSON reader took a `\u` escape with a sign (`\u+041`, `\u-001`) as a character instead of rejecting it; it now needs exactly four hex digits.
+
 ## 1.0.1 (2026-10-21), Hytale 0.7.3
 
 Small fixes found while testing against a real mod.

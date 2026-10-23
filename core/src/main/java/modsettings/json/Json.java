@@ -168,12 +168,9 @@ public final class Json {
                         case 'r' -> b.append('\r');
                         case 't' -> b.append('\t');
                         case 'u' -> {
-                            if (i + 4 > s.length()) throw error("bad \\u escape");
-                            try {
-                                b.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
-                            } catch (NumberFormatException ex) {
-                                throw error("bad \\u escape");
-                            }
+                            // Exactly four hex digits: Integer.parseInt alone would also take "+041" or "-001".
+                            if (i + 4 > s.length() || !s.substring(i, i + 4).matches("[0-9a-fA-F]{4}")) throw error("bad \\u escape");
+                            b.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
                             i += 4;
                         }
                         default -> throw error("bad escape \\" + e);
